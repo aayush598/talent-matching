@@ -398,7 +398,7 @@ class TeamMatchingAlgorithm:
 
 
 def create_sample_data_from_file(json_file_path='data.json'):
-    """Load team members and project from a JSON file"""
+    """Load team members and projects from a JSON file"""
     algorithm = TeamMatchingAlgorithm()
 
     with open(json_file_path, 'r') as f:
@@ -421,65 +421,131 @@ def create_sample_data_from_file(json_file_path='data.json'):
         member = TeamMember(**member_data)
         algorithm.add_member(member)
 
-    # Load project
-    proj_data = data['project']
-    requirements = [
-        ProjectRequirement(
-            r['skill_name'],
-            r['min_proficiency'],
-            ExperienceLevel[r['min_experience_level']],
-            r['is_mandatory'],
-            r['min_experience_years']
-        ) for r in proj_data.pop('requirements')
-    ]
-    proj_data['requirements'] = requirements
-    proj_data['start_date'] = datetime.strptime(proj_data['start_date'], '%Y-%m-%d')
-    proj_data['end_date'] = datetime.strptime(proj_data['end_date'], '%Y-%m-%d')
-    proj_data['priority'] = ProjectPriority[proj_data['priority']]
+    # Load projects - Handle both array and single project formats
+    projects_data = data['project'] if isinstance(data['project'], list) else [data['project']]
+    
+    for proj_data in projects_data:
+        # Create a copy to avoid modifying original data
+        proj_copy = proj_data.copy()
+        
+        requirements = []
+        for r in proj_copy.pop('requirements'):
+            # Handle different field name variations
+            proficiency = r.get('required_proficiency', r.get('min_proficiency', 5))
+            experience_level = r.get('experience_level', r.get('min_experience_level', 'JUNIOR'))
+            mandatory = r.get('mandatory', r.get('is_mandatory', True))
+            weight = r.get('weight', r.get('estimated_hours', 1.0))
+            
+            requirement = ProjectRequirement(
+                skill_name=r['skill_name'],
+                required_proficiency=proficiency,
+                min_experience_level=ExperienceLevel[experience_level],
+                is_mandatory=mandatory,
+                weight=weight
+            )
+            requirements.append(requirement)
+        
+        proj_copy['requirements'] = requirements
+        proj_copy['start_date'] = datetime.strptime(proj_copy['start_date'], '%Y-%m-%d')
+        proj_copy['end_date'] = datetime.strptime(proj_copy['end_date'], '%Y-%m-%d')
+        proj_copy['priority'] = ProjectPriority[proj_copy['priority']]
 
-    project = Project(**proj_data)
-    algorithm.add_project(project)
+        project = Project(**proj_copy)
+        algorithm.add_project(project)
 
     return algorithm
 
+
+def analyze_all_projects(algorithm: TeamMatchingAlgorithm):
+    """Analyze all projects and find best teams for each"""
+    print("=== ANALYZING ALL PROJECTS ===\n")
+    
+    for project in algorithm.projects:
+        print(f"{'='*60}")
+        print(f"PROJECT: {project.name}")
+        print(f"Priority: {project.priority.name}")
+        print(f"Team Size: {project.team_size}")
+        print(f"Budget: ${project.budget:,.2f}" if project.budget else "Budget: Not specified")
+        print(f"Duration: {project.start_date.strftime('%Y-%m-%d')} to {project.end_date.strftime('%Y-%m-%d')}")
+        print(f"{'='*60}")
+        
+        # Find best team for this project
+        try:
+            best_team = algorithm.find_best_team_for_project(project.id)
+            report = algorithm.generate_team_report(project.id, best_team)
+            
+            print("\n--- SELECTED TEAM ---")
+            for i, member in enumerate(report['team_members'], 1):
+                print(f"\n{i}. {member['name']} ({member['experience_level']})")
+                print(f"   Match Score: {member['match_score']}/100")
+                print(f"   Email: {member['email']}")
+                print(f"   Availability: {member['availability']['status']} ({member['availability']['workload']}% workload)")
+                print(f"   Top Skills:")
+                # Show top 5 skills
+                top_skills = sorted(member['skills'], key=lambda x: x['proficiency'], reverse=True)[:5]
+                for skill in top_skills:
+                    print(f"     • {skill['name']}: {skill['proficiency']}/10")
+            
+            print(f"\n--- TEAM STATISTICS ---")
+            stats = report['team_statistics']
+            print(f"Average Match Score: {stats['average_match_score']}/100")
+            if stats['estimated_total_cost']:
+                print(f"Estimated Total Cost: ${stats['estimated_total_cost']:,.2f}")
+            
+            print(f"\n--- REQUIREMENT COVERAGE ---")
+            for req in stats['requirement_coverage']:
+                status = "✅ COVERED" if req['is_covered'] else "❌ NOT COVERED"
+                mandatory = "(MANDATORY)" if req['is_mandatory'] else "(Optional)"
+                print(f"{status} {req['skill']} {mandatory}")
+                print(f"  Required: {req['required_proficiency']}/10")
+                if req['covered_by']:
+                    for member in req['covered_by']:
+                        icon = "✓" if member['proficiency'] >= req['required_proficiency'] else "⚠"
+                        print(f"    {icon} {member['member']}: {member['proficiency']}/10")
+                else:
+                    print(f"    ⚠ No team members have this skill")
+                    
+        except Exception as e:
+            print(f"Error analyzing project {project.id}: {e}")
+        
+        print(f"\n{'='*60}\n")
+
+
 if __name__ == "__main__":
-    # Example usage
+    # Load data and analyze all projects
     algorithm = create_sample_data_from_file('data.json')
     
-    # Find best team for project
-    project_id = 'PROJ001'
-    best_team = algorithm.find_best_team_for_project(project_id)
+    # Analyze all projects
+    analyze_all_projects(algorithm)
     
-    # Generate detailed report
-    report = algorithm.generate_team_report(project_id, best_team)
+    print("\n" + "="*80)
+    print("INDIVIDUAL PROJECT ANALYSIS")
+    print("="*80)
     
-    # Print results
-    print("=== TEAM MATCHING RESULTS ===")
-    print(f"Project: {report['project']['name']}")
-    print(f"Priority: {report['project']['priority']}")
-    print(f"Duration: {report['project']['duration']}")
-    print("\n=== SELECTED TEAM ===")
+    # Example: Detailed analysis for a specific project
+    project_id = 'PROJ002'  # AI Chatbot project
+    print(f"\n=== DETAILED ANALYSIS FOR {project_id} ===")
     
-    for member in report['team_members']:
-        print(f"\nMember: {member['name']} ({member['experience_level']})")
-        print(f"Match Score: {member['match_score']}/100")
-        print(f"Email: {member['email']}")
-        print(f"Availability: {member['availability']['status']} ({member['availability']['workload']}% workload)")
-        print("Skills:")
-        for skill in member['skills']:
-            print(f"  - {skill['name']}: {skill['proficiency']}/10")
-    
-    print(f"\n=== TEAM STATISTICS ===")
-    stats = report['team_statistics']
-    print(f"Team Size: {stats['team_size']}")
-    print(f"Average Match Score: {stats['average_match_score']}/100")
-    if stats['estimated_total_cost']:
-        print(f"Estimated Total Cost: ${stats['estimated_total_cost']:,.2f}")
-    
-    print("\n=== REQUIREMENT COVERAGE ===")
-    for req in stats['requirement_coverage']:
-        status = "✓" if req['is_covered'] else "✗"
-        mandatory = "(Mandatory)" if req['is_mandatory'] else "(Optional)"
-        print(f"{status} {req['skill']} {mandatory} - Required: {req['required_proficiency']}/10")
-        for member in req['covered_by']:
-            print(f"    {member['member']}: {member['proficiency']}/10")
+    try:
+        best_team = algorithm.find_best_team_for_project(project_id)
+        report = algorithm.generate_team_report(project_id, best_team)
+        
+        print(f"Project: {report['project']['name']}")
+        print(f"Priority: {report['project']['priority']}")
+        print(f"Duration: {report['project']['duration']}")
+        
+        print("\n=== DETAILED MEMBER BREAKDOWN ===")
+        for i, score in enumerate(best_team, 1):
+            member = next((m for m in algorithm.members if m.id == score.member_id), None)
+            if member:
+                print(f"\n{i}. {member.name}")
+                print(f"   Overall Score: {score.total_score:.1f}/100")
+                print(f"   Skill Match: {score.skill_match_score:.1f}/100")
+                print(f"   Availability: {score.availability_score:.1f}/100")
+                print(f"   Experience: {score.experience_score:.1f}/100")
+                print(f"   Cost Score: {score.cost_score:.1f}/100")
+                print(f"   Location: {score.location_score:.1f}/100")
+                print(f"   Certification: {score.certification_score:.1f}/100")
+                
+    except Exception as e:
+        print(f"Error: {e}")
