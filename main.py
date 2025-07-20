@@ -397,103 +397,54 @@ class TeamMatchingAlgorithm:
         }
 
 
-# Example usage and test data
-def create_sample_data():
-    """Create sample data for testing"""
+def create_sample_data_from_file(json_file_path='data.json'):
+    """Load team members and project from a JSON file"""
     algorithm = TeamMatchingAlgorithm()
-    
-    # Sample team members
-    members_data = [
-        {
-            'id': 'TM001',
-            'name': 'Alice Johnson',
-            'email': 'alice.johnson@company.com',
-            'department': 'Engineering',
-            'skills': [
-                Skill('Python', 9, 5.0, datetime(2024, 1, 1)),
-                Skill('React', 8, 3.0, datetime(2024, 2, 1)),
-                Skill('Docker', 7, 2.0, datetime(2024, 1, 15)),
-                Skill('AWS', 8, 4.0, datetime(2024, 1, 30))
-            ],
-            'experience_level': ExperienceLevel.SENIOR,
-            'availability_status': AvailabilityStatus.AVAILABLE,
-            'current_workload': 20.0,
-            'hourly_rate': 75.0,
-            'location': 'New York',
-            'certifications': ['AWS Certified Developer', 'Scrum Master']
-        },
-        {
-            'id': 'TM002',
-            'name': 'Bob Smith',
-            'email': 'bob.smith@company.com',
-            'department': 'Engineering',
-            'skills': [
-                Skill('Java', 9, 8.0, datetime(2024, 1, 1)),
-                Skill('Spring Boot', 8, 6.0, datetime(2024, 1, 10)),
-                Skill('Kubernetes', 7, 3.0, datetime(2024, 2, 1)),
-                Skill('PostgreSQL', 8, 5.0, datetime(2024, 1, 20))
-            ],
-            'experience_level': ExperienceLevel.LEAD,
-            'availability_status': AvailabilityStatus.PARTIALLY_AVAILABLE,
-            'current_workload': 60.0,
-            'hourly_rate': 90.0,
-            'location': 'San Francisco',
-            'certifications': ['Oracle Java Certified', 'PMP']
-        },
-        {
-            'id': 'TM003',
-            'name': 'Carol Davis',
-            'email': 'carol.davis@company.com',
-            'department': 'Design',
-            'skills': [
-                Skill('UI/UX Design', 9, 4.0, datetime(2024, 1, 1)),
-                Skill('Figma', 9, 3.0, datetime(2024, 1, 5)),
-                Skill('React', 6, 2.0, datetime(2024, 2, 1)),
-                Skill('User Research', 8, 4.0, datetime(2024, 1, 15))
-            ],
-            'experience_level': ExperienceLevel.MID,
-            'availability_status': AvailabilityStatus.AVAILABLE,
-            'current_workload': 10.0,
-            'hourly_rate': 65.0,
-            'location': 'New York',
-            'certifications': ['Google UX Design']
-        }
-    ]
-    
-    for member_data in members_data:
+
+    with open(json_file_path, 'r') as f:
+        data = json.load(f)
+
+    # Load members
+    for member_data in data['members']:
+        skills = [
+            Skill(
+                s['name'],
+                s['proficiency'],
+                s['experience_years'],
+                datetime.strptime(s['last_used'], '%Y-%m-%d')
+            ) for s in member_data.pop('skills')
+        ]
+        member_data['skills'] = skills
+        member_data['experience_level'] = ExperienceLevel[member_data['experience_level']]
+        member_data['availability_status'] = AvailabilityStatus[member_data['availability_status']]
+
         member = TeamMember(**member_data)
         algorithm.add_member(member)
-    
-    # Sample project
-    project = Project(
-        id='PROJ001',
-        name='E-commerce Platform Redesign',
-        description='Modernize the existing e-commerce platform with new UI and backend improvements',
-        requirements=[
-            ProjectRequirement('Python', 7, ExperienceLevel.MID, True, 2.0),
-            ProjectRequirement('React', 8, ExperienceLevel.MID, True, 2.0),
-            ProjectRequirement('AWS', 6, ExperienceLevel.MID, True, 1.5),
-            ProjectRequirement('UI/UX Design', 8, ExperienceLevel.MID, True, 1.5),
-            ProjectRequirement('Docker', 5, ExperienceLevel.JUNIOR, False, 1.0)
-        ],
-        start_date=datetime(2025, 8, 1),
-        end_date=datetime(2025, 12, 31),
-        priority=ProjectPriority.HIGH,
-        budget=50000.0,
-        team_size=3,
-        required_certifications=['AWS Certified Developer'],
-        preferred_locations=['New York', 'San Francisco'],
-        project_type='Web Development',
-        estimated_hours=600
-    )
-    
-    algorithm.add_project(project)
-    return algorithm
 
+    # Load project
+    proj_data = data['project']
+    requirements = [
+        ProjectRequirement(
+            r['skill_name'],
+            r['min_proficiency'],
+            ExperienceLevel[r['min_experience_level']],
+            r['is_mandatory'],
+            r['min_experience_years']
+        ) for r in proj_data.pop('requirements')
+    ]
+    proj_data['requirements'] = requirements
+    proj_data['start_date'] = datetime.strptime(proj_data['start_date'], '%Y-%m-%d')
+    proj_data['end_date'] = datetime.strptime(proj_data['end_date'], '%Y-%m-%d')
+    proj_data['priority'] = ProjectPriority[proj_data['priority']]
+
+    project = Project(**proj_data)
+    algorithm.add_project(project)
+
+    return algorithm
 
 if __name__ == "__main__":
     # Example usage
-    algorithm = create_sample_data()
+    algorithm = create_sample_data_from_file('data.json')
     
     # Find best team for project
     project_id = 'PROJ001'
