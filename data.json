@@ -1,24 +1,6 @@
 {
   "members": [
     {
-      "id": "TM001",
-      "name": "Alice Johnson",
-      "email": "alice.johnson@company.com",
-      "department": "Engineering",
-      "skills": [
-        {"name": "Python", "proficiency": 9, "experience_years": 5.0, "last_used": "2024-01-01"},
-        {"name": "React", "proficiency": 8, "experience_years": 3.0, "last_used": "2024-02-01"},
-        {"name": "Docker", "proficiency": 7, "experience_years": 2.0, "last_used": "2024-01-15"},
-        {"name": "AWS", "proficiency": 8, "experience_years": 4.0, "last_used": "2024-01-30"}
-      ],
-      "experience_level": "SENIOR",
-      "availability_status": "AVAILABLE",
-      "current_workload": 20.0,
-      "hourly_rate": 75.0,
-      "location": "New York",
-      "certifications": ["AWS Certified Developer", "Scrum Master"]
-    },
-    {
   "id": "CD001",
   "name": "Alexander Chen",
   "email": "alexander.chen@company.com",
@@ -450,25 +432,68 @@
     "certifications": ["Django Professional", "PostgreSQL Professional"]
   }
   ],
-  "project": {
-    "id": "PROJ001",
-    "name": "E-commerce Platform Redesign",
-    "description": "Modernize the existing e-commerce platform with new UI and backend improvements",
-    "requirements": [
-      {"skill_name": "Python", "min_proficiency": 7, "min_experience_level": "MID", "is_mandatory": true, "min_experience_years": 2.0},
-      {"skill_name": "React", "min_proficiency": 8, "min_experience_level": "MID", "is_mandatory": true, "min_experience_years": 2.0},
-      {"skill_name": "AWS", "min_proficiency": 6, "min_experience_level": "MID", "is_mandatory": true, "min_experience_years": 1.5},
-      {"skill_name": "UI/UX Design", "min_proficiency": 8, "min_experience_level": "MID", "is_mandatory": true, "min_experience_years": 1.5},
-      {"skill_name": "Docker", "min_proficiency": 5, "min_experience_level": "JUNIOR", "is_mandatory": false, "min_experience_years": 1.0}
-    ],
-    "start_date": "2025-08-01",
-    "end_date": "2025-12-31",
-    "priority": "HIGH",
-    "budget": 50000.0,
-    "team_size": 3,
-    "required_certifications": ["AWS Certified Developer"],
-    "preferred_locations": ["New York", "San Francisco"],
-    "project_type": "Web Development",
-    "estimated_hours": 600
-  }
+  "project": [
+    {
+      "id": "PROJ001",
+      "name": "E-commerce Platform Redesign",
+      "description": "Modernize the existing e-commerce platform with new UI and backend improvements.",
+      "requirements": [
+        { "skill_name": "Python", "required_proficiency": 7, "experience_level": "MID", "mandatory": true, "estimated_hours": 2.0 },
+        { "skill_name": "React", "required_proficiency": 8, "experience_level": "MID", "mandatory": true, "estimated_hours": 2.0 },
+        { "skill_name": "AWS", "required_proficiency": 6, "experience_level": "MID", "mandatory": true, "estimated_hours": 1.5 },
+        { "skill_name": "UI/UX Design", "required_proficiency": 8, "experience_level": "MID", "mandatory": true, "estimated_hours": 1.5 },
+        { "skill_name": "Docker", "required_proficiency": 5, "experience_level": "JUNIOR", "mandatory": false, "estimated_hours": 1.0 }
+      ],
+      "start_date": "2025-08-01",
+      "end_date": "2025-12-31",
+      "priority": "HIGH",
+      "budget": 50000.0,
+      "team_size": 3,
+      "required_certifications": ["AWS Certified Developer"],
+      "preferred_locations": ["New York", "San Francisco"],
+      "project_type": "Web Development",
+      "estimated_hours": 600
+    },
+    {
+      "id": "PROJ002",
+      "name": "AI Chatbot for Customer Support",
+      "description": "Develop a scalable NLP-based chatbot for 24/7 customer support.",
+      "requirements": [
+        { "skill_name": "Python", "required_proficiency": 8, "experience_level": "SENIOR", "mandatory": true, "estimated_hours": 2.5 },
+        { "skill_name": "Machine Learning", "required_proficiency": 8, "experience_level": "SENIOR", "mandatory": true, "estimated_hours": 2.0 },
+        { "skill_name": "TensorFlow", "required_proficiency": 7, "experience_level": "MID", "mandatory": true, "estimated_hours": 1.5 },
+        { "skill_name": "Flask", "required_proficiency": 6, "experience_level": "MID", "mandatory": false, "estimated_hours": 1.0 }
+      ],
+      "start_date": "2025-09-01",
+      "end_date": "2026-02-28",
+      "priority": "MEDIUM",
+      "budget": 80000.0,
+      "team_size": 4,
+      "required_certifications": ["TensorFlow Developer"],
+      "preferred_locations": ["Boston"],
+      "project_type": "AI/NLP",
+      "estimated_hours": 750
+    },
+    {
+      "id": "PROJ003",
+      "name": "Data Lake & ETL Pipeline",
+      "description": "Create a real-time data ingestion and transformation system for analytics.",
+      "requirements": [
+        { "skill_name": "AWS", "required_proficiency": 7, "experience_level": "SENIOR", "mandatory": true, "estimated_hours": 3.0 },
+        { "skill_name": "Docker", "required_proficiency": 6, "experience_level": "MID", "mandatory": true, "estimated_hours": 2.0 },
+        { "skill_name": "SQL", "required_proficiency": 8, "experience_level": "MID", "mandatory": true, "estimated_hours": 2.0 },
+        { "skill_name": "Python", "required_proficiency": 7, "experience_level": "MID", "mandatory": true, "estimated_hours": 2.0 },
+        { "skill_name": "Git", "required_proficiency": 6, "experience_level": "JUNIOR", "mandatory": false, "estimated_hours": 1.0 }
+      ],
+      "start_date": "2025-07-15",
+      "end_date": "2025-12-15",
+      "priority": "HIGH",
+      "budget": 100000.0,
+      "team_size": 5,
+      "required_certifications": ["AWS Solutions Architect"],
+      "preferred_locations": ["Remote"],
+      "project_type": "Data Engineering",
+      "estimated_hours": 850
+    }
+  ]
 }
